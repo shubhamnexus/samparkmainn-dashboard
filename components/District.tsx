@@ -205,42 +205,57 @@ export function District({ period }: DistrictProps) {
       </div>
 
       {/* Table Section */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-white rounded-lg overflow-hidden">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SI No</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">District</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Blocks</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Schools</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Students</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teachers</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Progress</th>
+      <div className="overflow-x-auto rounded-2xl border border-orange-100/50 shadow-lg bg-white">
+        <table className="min-w-full divide-y divide-orange-100">
+          <thead>
+            <tr className="bg-gradient-to-r from-orange-50 to-orange-100/50">
+              <th className="px-6 py-4 text-left text-xs font-semibold text-orange-800 uppercase tracking-wider">SI No</th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-orange-800 uppercase tracking-wider">District</th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-orange-800 uppercase tracking-wider">Blocks</th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-orange-800 uppercase tracking-wider">Schools</th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-orange-800 uppercase tracking-wider">Students</th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-orange-800 uppercase tracking-wider">Teachers</th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-orange-800 uppercase tracking-wider">Progress</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody className="divide-y divide-orange-100">
             {districtData.map((district) => (
-              <tr key={district.code}>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">{district.rank}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{district.district}</div>
-                  <div className="text-sm text-gray-500">{district.code}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{district.blocks}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{district.schools.toLocaleString()}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{district.students.toLocaleString()}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{district.teachers.toLocaleString()}</td>
+              <tr 
+                key={district.code}
+                className="transition-all duration-200 hover:bg-orange-50/50 group"
+              >
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
-                    <div className="w-48 bg-gray-200 rounded-full h-2.5">
+                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform duration-200">
+                      <span className="text-sm font-semibold text-orange-700">{district.rank}</span>
+                    </div>
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm font-medium text-gray-900 group-hover:text-orange-700 transition-colors duration-200">{district.district}</div>
+                  <div className="text-sm text-orange-600/80">{district.code}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-900 group-hover:text-orange-700 transition-colors duration-200">{district.blocks}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-900 group-hover:text-orange-700 transition-colors duration-200">{district.schools.toLocaleString()}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-900 group-hover:text-orange-700 transition-colors duration-200">{district.students.toLocaleString()}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-900 group-hover:text-orange-700 transition-colors duration-200">{district.teachers.toLocaleString()}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="flex items-center">
+                    <div className="w-48 bg-orange-100 rounded-full h-2.5 shadow-inner">
                       <div 
-                        className="bg-orange-500 h-2.5 rounded-full" 
+                        className="bg-gradient-to-r from-orange-500 to-orange-600 h-2.5 rounded-full transition-all duration-500 group-hover:from-orange-600 group-hover:to-orange-700" 
                         style={{ width: `${district.progress}%` }}
                       ></div>
                     </div>
-                    <span className="ml-2 text-sm text-gray-600">{district.progress}%</span>
+                    <span className="ml-2 text-sm font-medium text-orange-700 group-hover:text-orange-800 transition-colors duration-200">{district.progress}%</span>
                   </div>
                 </td>
               </tr>
