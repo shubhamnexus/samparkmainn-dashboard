@@ -10,6 +10,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { format } from "date-fns"
 import { CalendarIcon, LineChart, BarChart, TrendingUp, Target, Clock } from "lucide-react"
 import {
@@ -58,6 +65,7 @@ const inputStyles = `
 export function ProgramGoals({ period }: ProgramGoalsProps) {
   const [startDate, setStartDate] = useState<Date>()
   const [endDate, setEndDate] = useState<Date>()
+  const [selectedTerm, setSelectedTerm] = useState<string>("1")
   const [showChart, setShowChart] = useState(true)
   const [selectedAttributes, setSelectedAttributes] = useState<string[]>([
     "Investment",
@@ -76,9 +84,7 @@ export function ProgramGoals({ period }: ProgramGoalsProps) {
   ])
 
   const calculateTerm = () => {
-    if (!startDate || !endDate) return 0
-    const diffTime = Math.abs(endDate.getTime() - startDate.getTime())
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 365))
+    return parseInt(selectedTerm)
   }
 
   const updatePlanValue = (index: number, year: 'year1' | 'year2' | 'year3', value: string) => {
@@ -95,27 +101,26 @@ export function ProgramGoals({ period }: ProgramGoalsProps) {
   const toggleAttributeSelection = (attribute: string) => {
     setSelectedAttributes(prev =>
       prev.includes(attribute)
-        ? prev.filter(a => a !== attribute)
-        : [...prev, attribute]
+        ? []
+        : [attribute]
     )
   }
 
   const chartData = programPlan
     .filter(plan => selectedAttributes.includes(plan.attribute))
-    .map(plan => ({
-      name: plan.attribute,
-      "Year 1": plan.year1,
-      "Year 2": plan.year2,
-      "Year 3": plan.year3,
-    }))
+    .flatMap(plan => [
+      { year: "Year 1", attribute: plan.attribute, value: plan.year1 },
+      { year: "Year 2", attribute: plan.attribute, value: plan.year2 },
+      { year: "Year 3", attribute: plan.attribute, value: plan.year3 }
+    ])
 
   return (
-    <div className="space-y-8 p-8 max-w-7xl mx-auto">
+    <div className="space-y-4 px-4 pb-4 pt-0 max-w-7xl mx-auto">
       <style>{inputStyles}</style>
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 bg-gradient-to-br from-orange-50 via-orange-100/50 to-orange-50 p-8 rounded-3xl border-2 border-orange-200/60 shadow-lg">
-        <div className="space-y-3">
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-orange-600 via-orange-700 to-orange-800 bg-clip-text text-transparent">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-br from-orange-50 via-orange-100/50 to-orange-50 p-4 py-8 rounded-3xl border-2 border-orange-200/60 shadow-lg">
+        <div className="space-y-1">
+          <h1 className="text-5xl font-bold leading-[1.3] py-1 bg-gradient-to-r from-orange-600 via-orange-700 to-orange-800 bg-clip-text text-transparent">
             Program Planning
           </h1>
           <p className="text-orange-600/90 text-xl font-medium">
@@ -135,8 +140,8 @@ export function ProgramGoals({ period }: ProgramGoalsProps) {
       </div>
 
       {/* Program Duration Section */}
-      <Card className="p-8 shadow-lg border-orange-100">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <Card className="p-4 shadow-lg border-orange-100">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-3">
             <Label className="text-lg font-medium text-gray-700">Program Start Date</Label>
             <Popover>
@@ -179,21 +184,23 @@ export function ProgramGoals({ period }: ProgramGoalsProps) {
 
           <div className="space-y-3">
             <Label className="text-lg font-medium text-gray-700">Term (years)</Label>
-            <div className="relative">
-              <Input
-                value={calculateTerm()}
-                readOnly
-                className="h-12 bg-orange-50/50 border-orange-200 text-lg font-medium"
-              />
-              <Clock className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-orange-600" />
-            </div>
+            <Select value={selectedTerm} onValueChange={setSelectedTerm}>
+              <SelectTrigger className="h-12 bg-orange-50/50 border-orange-200">
+                <SelectValue placeholder="Select term" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">1 Year</SelectItem>
+                <SelectItem value="2">2 Years</SelectItem>
+                <SelectItem value="3">3 Years</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </Card>
 
       {/* Program Plan Table */}
-      <Card className="p-8 shadow-lg border-orange-100">
-        <div className="flex justify-between items-center mb-6">
+      <Card className="p-4 shadow-lg border-orange-100">
+        <div className="flex justify-between items-center mb-4">
           <h2 className="text-3xl font-semibold bg-gradient-to-r from-orange-600 to-orange-800 bg-clip-text text-transparent">
             Program Plan
           </h2>
@@ -274,14 +281,14 @@ export function ProgramGoals({ period }: ProgramGoalsProps) {
 
         {/* Trend Chart */}
         {showChart && selectedAttributes.length > 0 && (
-          <div className="mt-8 p-6 bg-white rounded-xl border border-orange-100 shadow-sm">
+          <div className="mt-4 p-4 bg-white rounded-xl border border-orange-100 shadow-sm">
             <h3 className="text-xl font-semibold text-gray-800 mb-4">Progress Trends</h3>
             <div className="h-[400px]">
               <ResponsiveContainer width="100%" height="100%">
                 <RechartsLineChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
                   <XAxis 
-                    dataKey="name" 
+                    dataKey="year" 
                     tick={{ fill: '#6b7280' }}
                     axisLine={{ stroke: '#e5e7eb' }}
                   />
@@ -298,30 +305,18 @@ export function ProgramGoals({ period }: ProgramGoalsProps) {
                     }}
                   />
                   <Legend />
-                  <Line 
-                    type="monotone" 
-                    dataKey="Year 1" 
-                    stroke="#f97316" 
-                    strokeWidth={2}
-                    dot={{ r: 4 }}
-                    activeDot={{ r: 6 }}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="Year 2" 
-                    stroke="#ea580c" 
-                    strokeWidth={2}
-                    dot={{ r: 4 }}
-                    activeDot={{ r: 6 }}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="Year 3" 
-                    stroke="#c2410c" 
-                    strokeWidth={2}
-                    dot={{ r: 4 }}
-                    activeDot={{ r: 6 }}
-                  />
+                  {selectedAttributes.map((attribute, index) => (
+                    <Line 
+                      key={attribute}
+                      type="monotone" 
+                      dataKey="value" 
+                      name={attribute}
+                      stroke={index === 0 ? "#f97316" : index === 1 ? "#ea580c" : "#c2410c"}
+                      strokeWidth={2}
+                      dot={{ r: 4 }}
+                      activeDot={{ r: 6 }}
+                    />
+                  ))}
                 </RechartsLineChart>
               </ResponsiveContainer>
             </div>
