@@ -45,7 +45,7 @@ export function ProgramOverview({
       {/* Header Section */}
       <div className="bg-gradient-to-r from-[#FFF6ED] to-[#FFF6ED] border border-[#FFE5C2] rounded-2xl p-6" style={{ boxShadow: '0 1px 4px 0 #FFE5C2' }}>
         <div className="space-y-1">
-          <h1 className="text-4xl font-bold text-[#D35400]">Program Coverage</h1>
+          <h1 className="text-4xl font-bold text-[#D35400]">Program Overview</h1>
           <p className="text-lg text-[#E67E22]">
             Track and monitor program objectives and milestones
           </p>
