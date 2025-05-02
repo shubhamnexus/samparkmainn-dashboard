@@ -1,267 +1,329 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Progress } from "@/components/ui/progress"
-import { PARTNERS, PERIODS } from "@/data/constants"
-import { 
-  IndianRupee, 
-  School, 
-  GraduationCap, 
-  Users, 
-  Sparkles, 
-  Package, 
-  BookOpen, 
-  Tv 
-} from "lucide-react"
-import { useMemo } from "react"
+import { useState, useEffect } from "react"
+import { Card, CardContent } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Button } from "@/components/ui/button"
+import { Switch } from "@/components/ui/switch"
+import { Calendar } from "@/components/ui/calendar"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { format } from "date-fns"
+import { CalendarIcon, LineChart, BarChart, TrendingUp, Target, Clock } from "lucide-react"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import {
+  LineChart as RechartsLineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts"
 
-interface ProgramGoalsProps {
-  dateRange: {
-    from: Date | undefined;
-    to: Date | undefined;
-  };
+interface ProgramPlan {
+  attribute: string
+  year1: number
+  year2: number
+  year3: number
+  total: number
 }
 
-interface Metrics {
-  programAnnualBudget: number
-  noOfSchoolsInState: number
-  noOfSchoolsCoveredInPlan: number
-  noOfStudentsInState: number
-  noOfStudentsCoveredInPlan: number
-  noOfSparks: number
-  noOfKitsDistributed: number
-  noOfTeachersToTrained: number
-  samparkTvLedDistributed: number
-}
-
-// Simulated data for different states
-const stateData: Record<string, Metrics> = {
-  "karnataka": {
-    programAnnualBudget: 450000000,
-    noOfSchoolsInState: 28000,
-    noOfSchoolsCoveredInPlan: 18000,
-    noOfStudentsInState: 8400000,
-    noOfStudentsCoveredInPlan: 5400000,
-    noOfSparks: 16200000,
-    noOfKitsDistributed: 54000,
-    noOfTeachersToTrained: 90000,
-    samparkTvLedDistributed: 18000
-  },
-  "maharashtra": {
-    programAnnualBudget: 550000000,
-    noOfSchoolsInState: 32000,
-    noOfSchoolsCoveredInPlan: 22000,
-    noOfStudentsInState: 9600000,
-    noOfStudentsCoveredInPlan: 6600000,
-    noOfSparks: 19800000,
-    noOfKitsDistributed: 66000,
-    noOfTeachersToTrained: 110000,
-    samparkTvLedDistributed: 22000
-  },
-  "tamil-nadu": {
-    programAnnualBudget: 400000000,
-    noOfSchoolsInState: 25000,
-    noOfSchoolsCoveredInPlan: 15000,
-    noOfStudentsInState: 7500000,
-    noOfStudentsCoveredInPlan: 4500000,
-    noOfSparks: 13500000,
-    noOfKitsDistributed: 45000,
-    noOfTeachersToTrained: 75000,
-    samparkTvLedDistributed: 15000
-  },
-  "telangana": {
-    programAnnualBudget: 350000000,
-    noOfSchoolsInState: 22000,
-    noOfSchoolsCoveredInPlan: 12000,
-    noOfStudentsInState: 6600000,
-    noOfStudentsCoveredInPlan: 3600000,
-    noOfSparks: 10800000,
-    noOfKitsDistributed: 36000,
-    noOfTeachersToTrained: 60000,
-    samparkTvLedDistributed: 12000
+const inputStyles = `
+  /* Remove arrows from number input */
+  input[type=number]::-webkit-inner-spin-button,
+  input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
   }
-}
+  input[type=number] {
+    -moz-appearance: textfield;
+  }
+`
 
-// Period multipliers to simulate different time periods
-const periodMultipliers: Record<string, number> = {
-  "q1": 0.25,  // Q1 only
-  "q2": 0.5,   // Q1 + Q2
-  "q3": 0.75,  // Q1 + Q2 + Q3
-  "q4": 1,     // Q1 + Q2 + Q3 + Q4
-  "fy": 1      // Full year (same as Q4)
-}
+export function ProgramGoals() {
+  const [startDate, setStartDate] = useState<Date>()
+  const [endDate, setEndDate] = useState<Date>()
+  const [showChart, setShowChart] = useState(true)
+  const [selectedAttributes, setSelectedAttributes] = useState<string[]>([
+    "Investment",
+    "No of Schools to be Covered",
+    "No of Teachers to be Trained"
+  ])
+  const [programPlan, setProgramPlan] = useState<ProgramPlan[]>([
+    { attribute: "Investment", year1: 1000000, year2: 800000, year3: 600000, total: 2400000 },
+    { attribute: "No of District to be Covered", year1: 10, year2: 8, year3: 5, total: 23 },
+    { attribute: "No of Blocks to be Covered", year1: 30, year2: 24, year3: 15, total: 69 },
+    { attribute: "No of Schools to be Covered", year1: 100, year2: 80, year3: 50, total: 230 },
+    { attribute: "No of Teachers to be Trained", year1: 100, year2: 80, year3: 60, total: 240 },
+    { attribute: "No of Kits to be Distributed", year1: 1000, year2: 800, year3: 500, total: 2300 },
+    { attribute: "No of Sampark TV to be Distributed", year1: 1500, year2: 900, year3: 600, total: 3000 },
+    { attribute: "No of TV to be Distributed", year1: 500, year2: 400, year3: 300, total: 1200 },
+  ])
 
-export function ProgramGoals({
-  dateRange,
-}: ProgramGoalsProps) {
-  const metrics = useMemo(() => {
-    const baseMetrics = stateData["karnataka"]
-    const multiplier = 1 // Default multiplier for date range
+  const calculateTerm = () => {
+    if (!startDate || !endDate) return 0
+    const diffTime = Math.abs(endDate.getTime() - startDate.getTime())
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 365))
+  }
 
-    // Calculate the target numbers based on date range
-    const getPeriodTarget = (baseNumber: number) => {
-      if (!dateRange.from || !dateRange.to) return baseNumber;
-      
-      const totalDays = 365; // Total days in a year
-      const selectedDays = Math.ceil((dateRange.to.getTime() - dateRange.from.getTime()) / (1000 * 60 * 60 * 24));
-      const factor = selectedDays / totalDays;
-      
-      return Math.round(baseNumber * factor);
-    };
-
-    return {
-      programAnnualBudget: baseMetrics.programAnnualBudget,
-      noOfSchoolsInState: baseMetrics.noOfSchoolsInState,
-      noOfSchoolsCoveredInPlan: getPeriodTarget(baseMetrics.noOfSchoolsCoveredInPlan),
-      noOfStudentsInState: baseMetrics.noOfStudentsInState,
-      noOfStudentsCoveredInPlan: getPeriodTarget(baseMetrics.noOfStudentsCoveredInPlan),
-      noOfSparks: getPeriodTarget(baseMetrics.noOfSparks),
-      noOfKitsDistributed: getPeriodTarget(baseMetrics.noOfKitsDistributed),
-      noOfTeachersToTrained: getPeriodTarget(baseMetrics.noOfTeachersToTrained),
-      samparkTvLedDistributed: getPeriodTarget(baseMetrics.samparkTvLedDistributed)
+  const updatePlanValue = (index: number, year: 'year1' | 'year2' | 'year3', value: string) => {
+    const newValue = parseFloat(value) || 0
+    const updatedPlan = [...programPlan]
+    updatedPlan[index] = {
+      ...updatedPlan[index],
+      [year]: newValue,
+      total: updatedPlan[index].year1 + updatedPlan[index].year2 + updatedPlan[index].year3
     }
-  }, [dateRange])
+    setProgramPlan(updatedPlan)
+  }
+
+  const toggleAttributeSelection = (attribute: string) => {
+    setSelectedAttributes(prev =>
+      prev.includes(attribute)
+        ? prev.filter(a => a !== attribute)
+        : [...prev, attribute]
+    )
+  }
+
+  const chartData = programPlan
+    .filter(plan => selectedAttributes.includes(plan.attribute))
+    .map(plan => ({
+      name: plan.attribute,
+      "Year 1": plan.year1,
+      "Year 2": plan.year2,
+      "Year 3": plan.year3,
+    }))
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 p-8 max-w-7xl mx-auto">
+      <style>{inputStyles}</style>
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-gradient-to-br from-orange-50 to-orange-100/50 p-6 rounded-2xl border-2 border-orange-200/60 shadow-sm">
-        <div className="space-y-2">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-600 to-orange-800 bg-clip-text text-transparent">
-            Program Coverage
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 bg-gradient-to-br from-orange-50 via-orange-100/50 to-orange-50 p-8 rounded-3xl border-2 border-orange-200/60 shadow-lg">
+        <div className="space-y-3">
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-orange-600 via-orange-700 to-orange-800 bg-clip-text text-transparent">
+            Program Planning
           </h1>
-          <p className="text-orange-600/80 text-lg">
-            Track and monitor program objectives and milestones
+          <p className="text-orange-600/90 text-xl font-medium">
+            Define program objectives and track progress across years
           </p>
+        </div>
+        <div className="flex gap-4">
+          <div className="flex items-center gap-2 bg-white/80 p-3 rounded-xl shadow-sm">
+            <Target className="h-5 w-5 text-orange-600" />
+            <span className="text-orange-800 font-medium">Strategic Goals</span>
+          </div>
+          <div className="flex items-center gap-2 bg-white/80 p-3 rounded-xl shadow-sm">
+            <TrendingUp className="h-5 w-5 text-orange-600" />
+            <span className="text-orange-800 font-medium">Progress Tracking</span>
+          </div>
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {/* Program Annual Budget Card */}
-        <Card className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
-          <CardContent className="p-6">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <IndianRupee className="h-5 w-5 text-orange-500" />
-                <p className="text-gray-600 text-sm">Program Annual Budget</p>
-              </div>
-              <p className="text-2xl font-semibold text-orange-500">₹{metrics.programAnnualBudget.toLocaleString()}</p>
-              <p className="text-gray-500 text-sm">Annual</p>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Program Duration Section */}
+      <Card className="p-8 shadow-lg border-orange-100">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="space-y-3">
+            <Label className="text-lg font-medium text-gray-700">Program Start Date</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full justify-start text-left font-normal h-12 hover:bg-orange-50 border-orange-200">
+                  <CalendarIcon className="mr-2 h-5 w-5 text-orange-600" />
+                  {startDate ? format(startDate, "PPP") : "Select date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={startDate}
+                  onSelect={setStartDate}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
 
-        {/* No of Schools in State Card */}
-        <Card className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
-          <CardContent className="p-6">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <School className="h-5 w-5 text-orange-500" />
-                <p className="text-gray-600 text-sm">No of Schools in State</p>
-              </div>
-              <p className="text-2xl font-semibold text-orange-500">{metrics.noOfSchoolsInState.toLocaleString()}</p>
-              <p className="text-gray-500 text-sm">Total</p>
-            </div>
-          </CardContent>
-        </Card>
+          <div className="space-y-3">
+            <Label className="text-lg font-medium text-gray-700">Program End Date</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full justify-start text-left font-normal h-12 hover:bg-orange-50 border-orange-200">
+                  <CalendarIcon className="mr-2 h-5 w-5 text-orange-600" />
+                  {endDate ? format(endDate, "PPP") : "Select date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={endDate}
+                  onSelect={setEndDate}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
 
-        {/* No of Schools covered in plan Card */}
-        <Card className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
-          <CardContent className="p-6">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <School className="h-5 w-5 text-orange-500" />
-                <p className="text-gray-600 text-sm">No of Schools covered in plan</p>
-              </div>
-              <p className="text-2xl font-semibold text-orange-500">{metrics.noOfSchoolsCoveredInPlan.toLocaleString()}</p>
-              <p className="text-gray-500 text-sm">FY</p>
+          <div className="space-y-3">
+            <Label className="text-lg font-medium text-gray-700">Term (years)</Label>
+            <div className="relative">
+              <Input
+                value={calculateTerm()}
+                readOnly
+                className="h-12 bg-orange-50/50 border-orange-200 text-lg font-medium"
+              />
+              <Clock className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-orange-600" />
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
+      </Card>
 
-        {/* No of Students in State Card */}
-        <Card className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
-          <CardContent className="p-6">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-orange-500" />
-                <p className="text-gray-600 text-sm">No of Students in State</p>
-              </div>
-              <p className="text-2xl font-semibold text-orange-500">{metrics.noOfStudentsInState.toLocaleString()}</p>
-              <p className="text-gray-500 text-sm">Total</p>
+      {/* Program Plan Table */}
+      <Card className="p-8 shadow-lg border-orange-100">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-3xl font-semibold bg-gradient-to-r from-orange-600 to-orange-800 bg-clip-text text-transparent">
+            Program Plan
+          </h2>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 bg-orange-50/50 p-2 rounded-lg">
+              <Switch
+                checked={showChart}
+                onCheckedChange={setShowChart}
+                className="data-[state=checked]:bg-orange-600"
+              />
+              <Label className="text-gray-700 font-medium">Show Chart</Label>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        {/* No of Students covered in plan Card */}
-        <Card className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
-          <CardContent className="p-6">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-orange-500" />
-                <p className="text-gray-600 text-sm">No of Students covered in plan</p>
-              </div>
-              <p className="text-2xl font-semibold text-orange-500">{metrics.noOfStudentsCoveredInPlan.toLocaleString()}</p>
-              <p className="text-gray-500 text-sm">FY</p>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="overflow-x-auto rounded-xl border border-orange-100">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-orange-50/50 hover:bg-orange-50/50">
+                <TableHead className="w-[300px] text-gray-700 font-semibold">Attribute</TableHead>
+                <TableHead className="text-gray-700 font-semibold">Year 1</TableHead>
+                <TableHead className="text-gray-700 font-semibold">Year 2</TableHead>
+                <TableHead className="text-gray-700 font-semibold">Year 3</TableHead>
+                <TableHead className="text-gray-700 font-semibold">Total</TableHead>
+                {showChart && <TableHead className="text-gray-700 font-semibold">Chart</TableHead>}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {programPlan.map((plan, index) => (
+                <TableRow key={plan.attribute} className="hover:bg-orange-50/30">
+                  <TableCell className="font-medium text-gray-800">{plan.attribute}</TableCell>
+                  <TableCell>
+                    <Input
+                      type="number"
+                      value={plan.year1}
+                      readOnly
+                      className="w-28 bg-orange-50/50 border-orange-200"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      type="number"
+                      value={plan.year2}
+                      readOnly
+                      className="w-28 bg-orange-50/50 border-orange-200"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      type="number"
+                      value={plan.year3}
+                      readOnly
+                      className="w-28 bg-orange-50/50 border-orange-200"
+                    />
+                  </TableCell>
+                  <TableCell className="font-semibold text-orange-700">{plan.total}</TableCell>
+                  {showChart && (
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleAttributeSelection(plan.attribute)}
+                        className={`hover:bg-orange-100 ${
+                          selectedAttributes.includes(plan.attribute) 
+                            ? "text-orange-600 bg-orange-50" 
+                            : "text-gray-500"
+                        }`}
+                      >
+                        <LineChart className="h-5 w-5" />
+                      </Button>
+                    </TableCell>
+                  )}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
 
-        {/* No of Sparks Card */}
-        <Card className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
-          <CardContent className="p-6">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-orange-500" />
-                <p className="text-gray-600 text-sm">No of Sparks</p>
-              </div>
-              <p className="text-2xl font-semibold text-orange-500">{metrics.noOfSparks.toLocaleString()}</p>
-              <p className="text-gray-500 text-sm">FY</p>
+        {/* Trend Chart */}
+        {showChart && selectedAttributes.length > 0 && (
+          <div className="mt-8 p-6 bg-white rounded-xl border border-orange-100 shadow-sm">
+            <h3 className="text-xl font-semibold text-gray-800 mb-4">Progress Trends</h3>
+            <div className="h-[400px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <RechartsLineChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                  <XAxis 
+                    dataKey="name" 
+                    tick={{ fill: '#6b7280' }}
+                    axisLine={{ stroke: '#e5e7eb' }}
+                  />
+                  <YAxis 
+                    tick={{ fill: '#6b7280' }}
+                    axisLine={{ stroke: '#e5e7eb' }}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'white',
+                      border: '1px solid #f3f4f6',
+                      borderRadius: '0.5rem',
+                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                    }}
+                  />
+                  <Legend />
+                  <Line 
+                    type="monotone" 
+                    dataKey="Year 1" 
+                    stroke="#f97316" 
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="Year 2" 
+                    stroke="#ea580c" 
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="Year 3" 
+                    stroke="#c2410c" 
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                </RechartsLineChart>
+              </ResponsiveContainer>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* No of kits Distributed Card */}
-        <Card className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
-          <CardContent className="p-6">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Package className="h-5 w-5 text-orange-500" />
-                <p className="text-gray-600 text-sm">No of kits Distributed</p>
-              </div>
-              <p className="text-2xl font-semibold text-orange-500">{metrics.noOfKitsDistributed.toLocaleString()}</p>
-              <p className="text-gray-500 text-sm">FY</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* No of teachers to be trained Card */}
-        <Card className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
-          <CardContent className="p-6">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-orange-500" />
-                <p className="text-gray-600 text-sm">No of teachers to be trained</p>
-              </div>
-              <p className="text-2xl font-semibold text-orange-500">{metrics.noOfTeachersToTrained.toLocaleString()}</p>
-              <p className="text-gray-500 text-sm">FY</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Sampark TV/LED Distributed Card */}
-        <Card className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
-          <CardContent className="p-6">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Tv className="h-5 w-5 text-orange-500" />
-                <p className="text-gray-600 text-sm">Sampark TV/LED Distributed</p>
-              </div>
-              <p className="text-2xl font-semibold text-orange-500">{metrics.samparkTvLedDistributed.toLocaleString()}</p>
-              <p className="text-gray-500 text-sm">FY</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        )}
+      </Card>
     </div>
   )
 } 

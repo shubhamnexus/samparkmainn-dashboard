@@ -285,51 +285,53 @@ const periodData = {
   }
 };
 
-// Function to get filtered data based on date range
-export function getFilteredData(from: Date | undefined, to: Date | undefined) {
-  let data = {
-    budget: 0,
-    schools: 0,
-    students: 0,
-    teachers: 0,
-    kits: 0
+// Function to get filtered data based on period
+export function getFilteredData(period: string) {
+  // Get data for the selected period
+  const periodData = {
+    Q1: {
+      budget: 600000,
+      schools: 300,
+      students: 75000,
+      teachers: 1600,
+      kits: 3200
+    },
+    Q2: {
+      budget: 750000,
+      schools: 380,
+      students: 95000,
+      teachers: 2000,
+      kits: 4000
+    },
+    Q3: {
+      budget: 900000,
+      schools: 450,
+      students: 115000,
+      teachers: 2400,
+      kits: 4800
+    },
+    Q4: {
+      budget: 850000,
+      schools: 420,
+      students: 105000,
+      teachers: 2200,
+      kits: 4400
+    },
+    YTD: {
+      budget: 3100000,
+      schools: 1550,
+      students: 390000,
+      teachers: 8200,
+      kits: 16400
+    }
   };
 
-  // Helper function to calculate date range factor
-  const getDateRangeFactor = () => {
-    if (!from || !to) return 1;
-    
-    const totalDays = 365; // Total days in a year
-    const selectedDays = Math.ceil((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24));
-    return selectedDays / totalDays;
-  };
-
-  const dateRangeFactor = getDateRangeFactor();
-
-  // Base data for the year
-  const baseData = {
-    budget: 1000000,
-    schools: 1000,
-    students: 50000,
-    teachers: 2000,
-    kits: 5000
-  };
-
-  // Apply date range factor to get proportional data
-  data = {
-    budget: Math.round(baseData.budget * dateRangeFactor),
-    schools: Math.round(baseData.schools * dateRangeFactor),
-    students: Math.round(baseData.students * dateRangeFactor),
-    teachers: Math.round(baseData.teachers * dateRangeFactor),
-    kits: Math.round(baseData.kits * dateRangeFactor)
-  };
-
-  return data;
+  return periodData[period as keyof typeof periodData] || periodData.YTD;
 }
 
-// Function to get budget data based on date range
-export function getBudgetData(from: Date | undefined, to: Date | undefined) {
-  const filteredData = getFilteredData(from, to);
+// Function to get budget data based on period
+export function getBudgetData(period: string) {
+  const filteredData = getFilteredData(period);
   return Math.round(filteredData.budget * 0.75); // 75% of budget utilized
 }
 
@@ -352,7 +354,7 @@ export function getPerformanceData(partner: string, period: string) {
     { month: 'Dec', students: 0, teachers: 0, schools: 0, phase: 'Review' }
   ];
 
-  const filteredData = getFilteredData(undefined, undefined);
+  const filteredData = getFilteredData(period);
   
   // Define phase-based multipliers
   const phaseMultipliers: Record<Phase, number> = {
@@ -387,7 +389,7 @@ export function getPerformanceData(partner: string, period: string) {
 
 // Function to get district-wise data
 export function getDistrictData(partner: string, period: string) {
-  const filteredData = getFilteredData(undefined, undefined);
+  const filteredData = getFilteredData(period);
   const numDistricts = 6;
   
   return Array.from({ length: numDistricts }, (_, i) => {
@@ -410,7 +412,7 @@ export function getDistrictData(partner: string, period: string) {
 
 // Function to get block-wise data
 export function getBlockData(partner: string, period: string) {
-  const filteredData = getFilteredData(undefined, undefined);
+  const filteredData = getFilteredData(period);
   const numBlocks = 6;
   
   return Array.from({ length: numBlocks }, (_, i) => {
@@ -432,7 +434,7 @@ export function getBlockData(partner: string, period: string) {
 }
 
 export function getPartnerDistribution(partner: string, period: string) {
-  const filteredData = getFilteredData(undefined, undefined);
+  const filteredData = getFilteredData(period);
   
   // If specific partner is selected, show their data only
   if (partner !== 'all') {

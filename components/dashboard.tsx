@@ -1,36 +1,27 @@
 "use client"
 
 import { useState } from "react"
-import { LayoutDashboard, BarChart2, PieChart, FileText, Settings, ChevronLeft, Activity } from "lucide-react"
+import { LayoutDashboard, BarChart2, PieChart, FileText, Settings, ChevronLeft, Activity, Target } from "lucide-react"
 import { Button } from "./ui/button"
 import { cn } from "@/lib/utils"
-import { ProgramGoals } from "./ProgramGoals"
+import { ProgramCoverage } from "./ProgramCoverage"
 import { LiveUpdates } from "./LiveUpdates"
 import { ProgramOverview } from "./ProgramOverview"
 import { District } from "@/components/District"
 import { ReportGenerator } from "./ReportGenerator"
+import { ProgramGoals } from "./ProgramGoals"
 import { Calendar } from "./ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 import { format } from "date-fns"
 import { CalendarIcon } from "lucide-react"
 import { DateRange } from "react-day-picker"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
+import { PERIODS } from "@/data/constants"
 
 export default function Dashboard() {
-  const [dateRange, setDateRange] = useState<{
-    from: Date | undefined;
-    to: Date | undefined;
-  }>({
-    from: new Date(new Date().getFullYear(), 0, 1),
-    to: new Date()
-  })
-  const [currentView, setCurrentView] = useState("overview")
+  const [selectedPeriod, setSelectedPeriod] = useState("YTD")
+  const [currentView, setCurrentView] = useState("goals")
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
-
-  const handleDateRangeSelect = (range: DateRange | undefined) => {
-    if (range) {
-      setDateRange({ from: range.from, to: range.to });
-    }
-  };
 
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-gray-50 to-gray-100">
@@ -44,41 +35,18 @@ export default function Dashboard() {
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-[300px] justify-start text-left font-normal border-orange-200 bg-white/80 backdrop-blur-sm text-gray-700 hover:border-orange-300 hover:bg-orange-50/50 transition-colors",
-                    !dateRange.from && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dateRange.from ? (
-                    dateRange.to ? (
-                      <>
-                        {format(dateRange.from, "LLL dd, y")} -{" "}
-                        {format(dateRange.to, "LLL dd, y")}
-                      </>
-                    ) : (
-                      format(dateRange.from, "LLL dd, y")
-                    )
-                  ) : (
-                    <span>Pick a date range</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  initialFocus
-                  mode="range"
-                  defaultMonth={dateRange.from}
-                  selected={dateRange}
-                  onSelect={handleDateRangeSelect}
-                  numberOfMonths={2}
-                />
-              </PopoverContent>
-            </Popover>
+            <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+              <SelectTrigger className="w-[180px] border-orange-200 bg-white/80 backdrop-blur-sm text-gray-700 hover:border-orange-300 hover:bg-orange-50/50 transition-colors">
+                <SelectValue placeholder="Select Period" />
+              </SelectTrigger>
+              <SelectContent>
+                {PERIODS.map((period) => (
+                  <SelectItem key={period.value} value={period.value}>
+                    {period.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="flex items-center gap-2">
             <img src="https://dmdashboard.samparksmartshala.org/static/media/logo-black.03df822f383fee06ef8e6e4fb67324de.svg" alt="Logo" className="h-48 w-48" />
@@ -100,15 +68,27 @@ export default function Dashboard() {
               <div className="space-y-2">
                 <a
                   href="#"
-                  onClick={() => setCurrentView("goals")}
+                  onClick={() => setCurrentView("coverage")}
                   className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-gray-600 transition-all hover:bg-gradient-to-r hover:from-orange-50 hover:to-orange-100/50 hover:text-orange-600 ${
-                    currentView === "goals" ? "bg-gradient-to-r from-orange-50 to-orange-100/50 text-orange-600 font-medium shadow-sm" : ""
+                    currentView === "coverage" ? "bg-gradient-to-r from-orange-50 to-orange-100/50 text-orange-600 font-medium shadow-sm" : ""
                   }`}
                 >
                   <BarChart2 className="h-5 w-5" />
                   <span className={cn("transition-opacity duration-300",
                     isSidebarCollapsed ? "opacity-0" : "opacity-100"
                   )}>Program Coverage</span>
+                </a>
+                <a
+                  href="#"
+                  onClick={() => setCurrentView("goals")}
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-gray-600 transition-all hover:bg-gradient-to-r hover:from-orange-50 hover:to-orange-100/50 hover:text-orange-600 ${
+                    currentView === "goals" ? "bg-gradient-to-r from-orange-50 to-orange-100/50 text-orange-600 font-medium shadow-sm" : ""
+                  }`}
+                >
+                  <Target className="h-5 w-5" />
+                  <span className={cn("transition-opacity duration-300",
+                    isSidebarCollapsed ? "opacity-0" : "opacity-100"
+                  )}>Program Goals</span>
                 </a>
                 <a
                   href="#"
@@ -190,17 +170,22 @@ export default function Dashboard() {
         <main className="flex-1 overflow-auto p-6 bg-gradient-to-br from-gray-50 to-gray-100">
           {currentView === "goals" && (
             <ProgramGoals
-              dateRange={dateRange}
+              period={selectedPeriod}
+            />
+          )}
+          {currentView === "coverage" && (
+            <ProgramCoverage
+              period={selectedPeriod}
             />
           )}
           {currentView === "overview" && (
             <ProgramOverview
-              dateRange={dateRange}
+              period={selectedPeriod}
             />
           )}
           {currentView === "district" && (
             <District
-              dateRange={dateRange}
+              period={selectedPeriod}
             />
           )}
           {currentView === "report" && (

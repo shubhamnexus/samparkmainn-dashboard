@@ -3,7 +3,7 @@ import { useState } from "react";
 import { DateRange } from "react-day-picker";
 
 interface DistrictProps {
-  dateRange: DateRange;
+  period: string;
 }
 
 // Generate school data for each block
@@ -184,11 +184,11 @@ const allDistrictData = [
 // Show only top 5 districts in the main view
 const districtData = allDistrictData.slice(0, 5);
 
-export function District({ dateRange }: DistrictProps) {
+export function District({ period }: DistrictProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDistrict, setSelectedDistrict] = useState<typeof allDistrictData[0] | null>(null);
   const [selectedBlock, setSelectedBlock] = useState<typeof allDistrictData[0]['blockData'][0] | null>(null);
-  const filteredData = getFilteredData(dateRange.from, dateRange.to);
+  const filteredData = getFilteredData(period);
 
   return (
     <div className="space-y-8">
