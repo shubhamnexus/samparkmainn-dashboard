@@ -39,6 +39,10 @@ interface ProgramPlan {
   total: number
 }
 
+interface ProgramGoalsProps {
+  period: string;
+}
+
 const inputStyles = `
   /* Remove arrows from number input */
   input[type=number]::-webkit-inner-spin-button,
@@ -51,7 +55,7 @@ const inputStyles = `
   }
 `
 
-export function ProgramGoals() {
+export function ProgramGoals({ period }: ProgramGoalsProps) {
   const [startDate, setStartDate] = useState<Date>()
   const [endDate, setEndDate] = useState<Date>()
   const [showChart, setShowChart] = useState(true)

@@ -4,7 +4,8 @@ import { getFilteredData, getBudgetData } from "@/services/dataService"
 import { format } from "date-fns"
 
 interface ProgramOverviewProps {
-  dateRange: {
+  period: string;
+  dateRange?: {
     from: Date | undefined;
     to: Date | undefined;
   };
@@ -35,6 +36,7 @@ interface TeacherTrainingData {
 }
 
 export function ProgramOverview({ 
+  period,
   dateRange,
 }: ProgramOverviewProps) {
 
